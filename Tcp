@@ -1,0 +1,42 @@
+import socket
+import RPi.GPIO as GPIO
+from subprocess import call
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(13, GPIO.OUT)
+
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.bind(("", 6666))
+print("UDPSever Waiting for client on port 6666")
+
+def FW():
+    GPIO.output(13, True)
+    print("On")
+    call(["ls", "-1"])
+
+def STOP():
+    GPIO.output(13, False)
+    print("Off")
+    call(["ls", "-all"])
+   
+options = {1:FW, 2:STOP}
+
+while True:
+    dataFromClient, address = server_socket.recvfrom(256)
+    dataFromClient = dataFromClient.rstrip()
+    options[int(dataFromClient)]()
+
+
+# CLIENT
+import socket
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+try :
+    while 1:
+        data = input("Enter Data : ")
+        client_socket.sendto(data.encode(), ('192.168.0.202',6666))
+        print("Sending Request")
+except Exception as ex:
+    print(ex)
+    raw_input()
+
+client_socket.close()
